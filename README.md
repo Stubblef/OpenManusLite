@@ -20,7 +20,7 @@ OpenManusLite is a streamlined version of the OpenManus project, retaining only 
 
 1. 克隆仓库 | Clone the repository
 ```bash
-git clone https://github.com/yourusername/OpenManusLite.git
+git clone https://github.com/Stubblef/OpenManusLite.git
 cd OpenManusLite
 ```
 
