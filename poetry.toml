@@ -1,0 +1,6 @@
+[virtualenvs]
+create = true
+in-project = true
+path = ".venv"
+prompt = "{project_name}"
+separate = true

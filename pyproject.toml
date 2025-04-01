@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "openmanuslite"
+version = "0.0.1"
+description = "OpenManusLite is a streamlined version of the OpenManus project, retaining only its most essential functional modules. This project provides a lightweight platform for developers to study, understand, and extend the core features of OpenManus."
+authors = ["Stubblef <tsing967@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
