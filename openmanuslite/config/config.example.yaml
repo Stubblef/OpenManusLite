@@ -1,0 +1,40 @@
+llm:
+  default:
+    model: "gpt-3.5-turbo"
+    base_url: "https://api.openai.com/v1"
+    api_key: "your-api-key-here"
+    max_tokens: 4096
+    max_input_tokens: 4096
+    temperature: 1.0
+    api_type: "OpenAI"
+    api_version: "2024-02-15"
+
+  azure:
+    model: "gpt-4"
+    base_url: "https://your-resource-name.openai.azure.com"
+    api_key: "your-azure-api-key"
+    max_tokens: 4096
+    max_input_tokens: 4096
+    temperature: 0.7
+    api_type: "Azure"
+    api_version: "2023-12-01-preview"
+
+  anthropic:
+    model: "claude-3-opus-20240229"
+    base_url: "https://api.anthropic.com/v1"
+    api_key: "your-anthropic-api-key"
+    max_tokens: 4096
+    max_input_tokens: 4096
+    temperature: 0.7
+    api_type: "Anthropic"
+    api_version: "2024-02-29"
+
+  ollama:
+    model: "llama2"
+    base_url: "http://localhost:11434"
+    api_key: ""
+    max_tokens: 4096
+    max_input_tokens: 4096
+    temperature: 0.7
+    api_type: "Ollama"
+    api_version: "1.0.0"

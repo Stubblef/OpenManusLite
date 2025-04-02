@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, List, Literal, Optional, Union
+from typing import Any, List, Literal, Optional, Union, Dict
 
 from pydantic import BaseModel, Field
 
@@ -51,11 +51,17 @@ class ToolCall(BaseModel):
     function: Function
 
 
+class ContentItem(BaseModel):
+    type: str
+    text: Optional[str] = None
+    image_url: Optional[Dict[str, str]] = None
+
+
 class Message(BaseModel):
     """Represents a chat message in the conversation"""
 
     role: ROLE_TYPE = Field(...)  # type: ignore
-    content: Optional[str] = Field(default=None)
+    content: Optional[Union[str, List[ContentItem]]] = Field(default=None)
     tool_calls: Optional[List[ToolCall]] = Field(default=None)
     name: Optional[str] = Field(default=None)
     tool_call_id: Optional[str] = Field(default=None)
@@ -84,7 +90,11 @@ class Message(BaseModel):
     def to_dict(self) -> dict:
         """Convert message to dictionary format"""
         message = {"role": self.role}
-        if self.content is not None:
+        if isinstance(self.content, list):
+            message["content"] = [
+                item.dict(exclude_none=True) for item in self.content
+            ]
+        elif self.content is not None:
             message["content"] = self.content
         if self.tool_calls is not None:
             message["tool_calls"] = [tool_call.dict() for tool_call in self.tool_calls]
