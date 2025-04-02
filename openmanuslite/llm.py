@@ -3,12 +3,6 @@ from typing import Dict, List, Optional, Union
 from openmanuslite.schema import Message, Role
 from openmanuslite.config.config import config
 
-# MULTIMODAL_MODELS = {
-#     "gpt-4-vision-preview",
-#     "claude-3-opus-20240229",
-#     "claude-3-sonnet-20240229"
-# }
-
 class LLM:
     _instances = {}
 
@@ -23,7 +17,7 @@ class LLM:
 
     def __init__(self, config_name: str = "default", llm_config = None):
         if not hasattr(self, "client"): 
-            llm_config = llm_config.get(config_name, llm_config["default"])
+            llm_config = llm_config.get(config_name)
             self.model = llm_config.model
             self.max_tokens = llm_config.max_tokens
             self.temperature = llm_config.temperature
@@ -37,6 +31,7 @@ class LLM:
         for message in messages:
             if isinstance(message, Message):
                 message = message.to_dict()
+                
             
             if isinstance(message, dict):
                 if "role" not in message:
@@ -102,7 +97,6 @@ class LLM:
 def main():
     import argparse
     import asyncio
-    from openmanuslite.llm_config import llm_config
     from openmanuslite.schema import Message
     parser = argparse.ArgumentParser(description="LLM CLI")
     parser.add_argument("--config", type=str, default="default", help="LLM config name")
@@ -111,12 +105,12 @@ def main():
     
     config_name = args.config
     message = args.message
-    llm_instance = LLM(config_name=config_name, llm_config=llm_config)
+    llm_instance = LLM(config_name=config_name)  # llm_config=llm_config
     
     async def run():
         messages = [Message(role="user", content=message)]
         try:
-            response = await llm_instance.ask(messages, stream=False)
+            response = await llm_instance.ask(messages, stream=True)
             print(f"\nLLM Response: {response}")
         except Exception as e:
             print(f"Error: {e}")
