@@ -176,3 +176,4 @@ poetry.lock
 logs/
 data/
 config.yaml
+*.ipynb
