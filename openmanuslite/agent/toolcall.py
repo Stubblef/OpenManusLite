@@ -9,7 +9,7 @@ from openmanuslite.agent.react import ReActAgent
 from openmanuslite.logger import logger
 from openmanuslite.prompts.toolcall import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from openmanuslite.schema import TOOL_CHOICE_TYPE, AgentState, Message, ToolCall, ToolChoice
-from openmanuslite.tools import CreateChatCompletion, Terminate, ToolCollection
+from openmanuslite.tools import CreateChatCompletion, ToolCollection #, Terminate 
 
 
 TOOL_CALL_REQUIRED = "Tool calls required but none provided"
@@ -25,16 +25,26 @@ class ToolCallAgent(ReActAgent):
     next_step_prompt: str = NEXT_STEP_PROMPT
 
     available_tools: ToolCollection = ToolCollection(
-        CreateChatCompletion(), Terminate()
-    )
+        CreateChatCompletion()
+    )  # Terminate()
     tool_choices: TOOL_CHOICE_TYPE = ToolChoice.AUTO  # type: ignore
-    special_tool_names: List[str] = Field(default_factory=lambda: [Terminate().name])
+    special_tool_names: List[str] =  [] # Field(default_factory=lambda: [Terminate().name])
 
     tool_calls: List[ToolCall] = Field(default_factory=list)
     _current_base64_image: Optional[str] = None
 
-    max_steps: int = 30
+    max_steps: int = 2
     max_observe: Optional[Union[int, bool]] = None
+
+    @property
+    def messages(self):
+        """Access messages from memory"""
+        return self.memory.messages
+    
+    @messages.setter
+    def messages(self, value):
+        """Set messages in memory"""
+        self.memory.messages = value
 
     async def think(self) -> bool:
         """Process current state and decide next actions using tools"""
@@ -42,9 +52,12 @@ class ToolCallAgent(ReActAgent):
         if self.next_step_prompt:
             user_msg = Message.user_message(self.next_step_prompt)
             self.messages += [user_msg]
+        
+        print(f"Thinking... Current state: {self.state}, step: {self.current_step}")  # Debugging line
 
         try:
             # Get response with tool options
+            print(f"self messages: {self.messages}")  # Debugging line to check messages
             response = await self.llm.ask_tool(
                 messages=self.messages,
                 system_msgs=(
@@ -57,21 +70,21 @@ class ToolCallAgent(ReActAgent):
             )
         except ValueError:
             raise
-        except Exception as e:
-            # Check if this is a RetryError containing TokenLimitExceeded
-            if hasattr(e, "__cause__") and isinstance(e.__cause__, TokenLimitExceeded):
-                token_limit_error = e.__cause__
-                logger.error(
-                    f"🚨 Token limit error (from RetryError): {token_limit_error}"
-                )
-                self.memory.add_message(
-                    Message.assistant_message(
-                        f"Maximum token limit reached, cannot continue execution: {str(token_limit_error)}"
-                    )
-                )
-                self.state = AgentState.FINISHED
-                return False
-            raise
+        # except Exception as e:
+        #     # Check if this is a RetryError containing TokenLimitExceeded
+        #     if hasattr(e, "__cause__") and isinstance(e.__cause__, TokenLimitExceeded):
+        #         token_limit_error = e.__cause__
+        #         logger.error(
+        #             f"🚨 Token limit error (from RetryError): {token_limit_error}"
+        #         )
+        #         self.memory.add_message(
+        #             Message.assistant_message(
+        #                 f"Maximum token limit reached, cannot continue execution: {str(token_limit_error)}"
+        #             )
+        #         )
+        #         self.state = AgentState.FINISHED
+        #         return False
+        #     raise
 
         self.tool_calls = tool_calls = (
             response.tool_calls if response and response.tool_calls else []

@@ -1,7 +1,10 @@
 from openai import AsyncOpenAI
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Literal
 from openmanuslite.schema import Message, Role
 from openmanuslite.config.config import config
+
+ToolChoice = Literal["none", "auto"] 
+TOOL_CHOICE_VALUES = ["none", "auto"]
 
 class LLM:
     _instances = {}
@@ -92,6 +95,64 @@ class LLM:
         if not full_response:
             raise ValueError("Empty response from streaming LLM")
         return full_response
+
+    async def ask_tool(
+        self,
+        messages: List[Union[dict, Message]],
+        system_msgs: Optional[List[Union[dict, Message]]] = None,
+        tools: Optional[List[dict]] = None,
+        tool_choice: ToolChoice = "auto",
+        temperature: Optional[float] = None,
+    ) -> Optional[dict]:
+        """
+        Ask LLM using functions/tools and return the response.
+
+        Args:
+            messages: List of conversation messages
+            system_msgs: Optional system messages to prepend
+            tools: List of tools to use
+            tool_choice: Tool choice strategy ("none" or "auto")
+            temperature: Sampling temperature for the response
+
+        Returns:
+            Optional[dict]: The model's response message
+        """
+        try:
+            if tool_choice not in TOOL_CHOICE_VALUES:
+                raise ValueError(f"Invalid tool_choice: {tool_choice}")
+
+            supports_images = True  # Simplified multimodal check
+            
+            if system_msgs:
+                messages = self.format_messages(system_msgs, supports_images) + self.format_messages(messages, supports_images)
+            else:
+                messages = self.format_messages(messages, supports_images)
+
+            if tools:
+                for tool in tools:
+                    if not isinstance(tool, dict) or "type" not in tool:
+                        raise ValueError("Each tool must be a dict with 'type' field")
+
+            params = {
+                "model": self.model,
+                "messages": messages,
+                "tools": tools,
+                "tool_choice": tool_choice,
+                "max_tokens": self.max_tokens,
+                "temperature": temperature if temperature is not None else self.temperature,
+                "stream": False  # Always use non-streaming for tool requests
+            }
+
+            response = await self.client.chat.completions.create(**params)
+
+            if not response.choices or not response.choices[0].message:
+                return None
+
+            return response.choices[0].message
+
+        except Exception as e:
+            print(f"Error in ask_tool: {e}")
+            raise
 
 
 def main():

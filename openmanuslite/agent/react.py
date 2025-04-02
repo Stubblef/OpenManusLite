@@ -2,10 +2,9 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from pydantic import Field
-
-# from app.agent.base import BaseAgent
-# from app.llm import LLM
-# from app.schema import AgentState, Memory
+from openmanuslite.agent.base import BaseAgent
+from openmanuslite.schema import AgentState, Memory
+from openmanuslite.llm import LLM
 
 
 class ReActAgent(BaseAgent, ABC):
