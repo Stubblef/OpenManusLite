@@ -10,7 +10,7 @@ from openmanuslite.logger import logger
 from openmanuslite.prompts.toolcall import NEXT_STEP_PROMPT, SYSTEM_PROMPT
 from openmanuslite.schema import TOOL_CHOICE_TYPE, AgentState, Message, ToolCall, ToolChoice
 from openmanuslite.tools import CreateChatCompletion, ToolCollection #, Terminate 
-
+from openmanuslite.schema import Memory, Message
 
 TOOL_CALL_REQUIRED = "Tool calls required but none provided"
 
@@ -27,7 +27,7 @@ class ToolCallAgent(ReActAgent):
     available_tools: ToolCollection = ToolCollection(
         CreateChatCompletion()
     )  # Terminate()
-    tool_choices: TOOL_CHOICE_TYPE = ToolChoice.AUTO  # type: ignore
+    tool_choices: TOOL_CHOICE_TYPE = ToolChoice.AUTO  # type: ignore  | none , required, auto
     special_tool_names: List[str] =  [] # Field(default_factory=lambda: [Terminate().name])
 
     tool_calls: List[ToolCall] = Field(default_factory=list)
@@ -45,6 +45,20 @@ class ToolCallAgent(ReActAgent):
     def messages(self, value):
         """Set messages in memory"""
         self.memory.messages = value
+        
+    async def add_message(self, message: Message):
+        """
+        Add a message to the agent's memory.
+        
+        Args:
+            message (Message): The message to add to memory.
+        """
+        if self.memory:
+            self.memory.add_message(message)
+        else:
+            # Initialize memory if not already done
+            self.memory = Memory()
+            self.memory.add_message(message)
 
     async def think(self) -> bool:
         """Process current state and decide next actions using tools"""
@@ -57,7 +71,6 @@ class ToolCallAgent(ReActAgent):
 
         try:
             # Get response with tool options
-            print(f"self messages: {self.messages}")  # Debugging line to check messages
             response = await self.llm.ask_tool(
                 messages=self.messages,
                 system_msgs=(
@@ -70,22 +83,10 @@ class ToolCallAgent(ReActAgent):
             )
         except ValueError:
             raise
-        # except Exception as e:
-        #     # Check if this is a RetryError containing TokenLimitExceeded
-        #     if hasattr(e, "__cause__") and isinstance(e.__cause__, TokenLimitExceeded):
-        #         token_limit_error = e.__cause__
-        #         logger.error(
-        #             f"🚨 Token limit error (from RetryError): {token_limit_error}"
-        #         )
-        #         self.memory.add_message(
-        #             Message.assistant_message(
-        #                 f"Maximum token limit reached, cannot continue execution: {str(token_limit_error)}"
-        #             )
-        #         )
-        #         self.state = AgentState.FINISHED
-        #         return False
-        #     raise
-
+        
+        print(f"Response received: {response}")  # Debugging line
+        print("=========================")  # Separator for clarity in logs
+        print(f"response tool_calls: {response.tool_calls}")  # Debugging line
         self.tool_calls = tool_calls = (
             response.tool_calls if response and response.tool_calls else []
         )

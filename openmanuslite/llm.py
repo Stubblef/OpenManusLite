@@ -143,8 +143,10 @@ class LLM:
                 "stream": False  # Always use non-streaming for tool requests
             }
 
+            print(f"LLM ask_tool params: {params}")  # 调试输出，查看请求参数
+            
             response = await self.client.chat.completions.create(**params)
-
+            print(f"LLM ask_tool response: {response}")  # 调试输出，查看响应内容
             if not response.choices or not response.choices[0].message:
                 return None
 

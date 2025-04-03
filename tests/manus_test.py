@@ -1,5 +1,8 @@
 from openmanuslite.agent.toolcall import ToolCallAgent
 from openmanuslite.schema import Memory, Message
+from openmanuslite.tools.tool_collection import ToolCollection
+from openmanuslite.tools.create_chat_completion import CreateChatCompletion
+from openmanuslite.tools.pyexec import PythonExecute
 
 SYSTEM_PROMPT = (
     "You are OpenManus, an all-capable AI assistant, aimed at solving any task presented by the user. "
@@ -23,13 +26,16 @@ class Manus(ToolCallAgent):
     next_step_prompt: str = NEXT_STEP_PROMPT
     memory: Memory = Memory()  # Initialize memory
     
+    available_tools: ToolCollection = ToolCollection(
+        # CreateChatCompletion(),
+        PythonExecute(),
+    )  # Terminate()
+    
+    
     async def think(self) -> bool:
         """Process current state and decide next actions with appropriate context."""
         # Store the original prompt
         original_prompt = self.next_step_prompt
-        
-        # Get recent message context
-        recent_messages = self.memory.messages[-3:] if self.memory.messages else []
         
         # Call parent think method
         result = await super().think()
@@ -41,10 +47,10 @@ class Manus(ToolCallAgent):
     
 async def main():
     agent = Manus()
-    prompt = "请帮我写一个Python脚本，计算1到100的和"
+    prompt = "写一个Python脚本，计算1到100的和"
     
     # Initialize memory with user request
-    agent.memory.add_message(Message(role="user", content=prompt))
+    # agent.memory.add_message(Message(role="user", content=prompt))
     
     await agent.run(request=prompt)
     
