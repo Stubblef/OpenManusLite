@@ -8,5 +8,7 @@ print("Hello, World!")
 print(2 + 2)
 """
 
-result = asyncio.run(executor.execute(code_snippet))
-print(result)
+if __name__ == "__main__":
+    # Ensure the multiprocessing code is executed within this block
+    result = asyncio.run(executor.execute(code_snippet))
+    print(result)

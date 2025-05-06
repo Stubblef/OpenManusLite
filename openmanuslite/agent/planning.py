@@ -10,7 +10,7 @@ from openmanuslite.flow.base import BaseFlow
 from openmanuslite.llm import LLM
 from openmanuslite.logger import logger
 from openmanuslite.schema import AgentState, Message, ToolChoice
-from openmanuslite.tool import PlanningTool
+from openmanuslite.tools import PlanningTool
 
 
 class PlanStepStatus(str, Enum):
